@@ -66,7 +66,14 @@ export function QuoteRequestScreen() {
   const trustedFormRef = useRef<TrustedFormCertRef>(null);
 
   const user = useAppSelector((s) => s.auth.user);
-  const { memberSlugs, serviceTypeId, mainCategoryId, categoryId, serviceTitle } = route.params;
+  const {
+    memberSlugs,
+    serviceTypeId,
+    mainCategoryId,
+    categoryId,
+    serviceTitle,
+    leadEndpoint,
+  } = route.params;
 
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
   const [lastName, setLastName] = useState(user?.last_name ?? '');
@@ -130,7 +137,7 @@ export function QuoteRequestScreen() {
     setSubmitting(true);
 
     try {
-      const body = {
+      const body: Record<string, unknown> = {
         service_type_id: serviceTypeId,
         main_category_id: mainCategoryId,
         category_id: categoryId,
@@ -148,13 +155,20 @@ export function QuoteRequestScreen() {
         cptcha_token: token,
         signup_url: SIGNUP_URL,
         cert_url: trustedFormCertUrl,
-        member_slugs: memberSlugs.join(','),
       };
+
+      const endpoint = leadEndpoint === 'generalleadv1'
+        ? servicesEndpoints.generalLeadV1()
+        : servicesEndpoints.memberLeadBySlug();
+
+      if (endpoint === servicesEndpoints.memberLeadBySlug()) {
+        body.member_slugs = (memberSlugs ?? []).join(',');
+      }
 
       console.log('[QuoteRequest] POST body:', body);
       const response = await apiRequest<{ message?: string }>({
         method: 'POST',
-        path: servicesEndpoints.memberLeadBySlug(),
+        path: endpoint,
         body,
       });
 

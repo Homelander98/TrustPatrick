@@ -14,4 +14,6 @@ export const servicesEndpoints = {
   },
 
   memberLeadBySlug: () => '/api/affiliate/memberleadbyslug',
+
+  generalLeadV1: () => '/api/affiliate/generalleadv1',
 } as const;

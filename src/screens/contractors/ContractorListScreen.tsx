@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { ArrowLeft, User, Star, Search } from 'lucide-react-native';
@@ -69,6 +69,7 @@ const MAX_SELECT = 3;
 export function ContractorListScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<ContractorListRouteProp>();
+  const isFocused = useIsFocused();
   const isTablet = useIsTablet();
   const contentMaxWidth = useMemo(() => (isTablet ? 720 : undefined), [isTablet]);
 
@@ -76,13 +77,14 @@ export function ContractorListScreen() {
 
   const user = useAppSelector((s) => s.auth.user);
 
-  const { scCode, serviceTitle } = route.params;
+  const { scCode, serviceTitle, serviceTypeId, mainCategoryId, categoryId } = route.params;
   const userZip = user?.zip ?? '';
 
   const [contractors, setContractors] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [didPromptNoContractors, setDidPromptNoContractors] = useState(false);
 
   useEffect(() => {
     if (!scCode || !userZip) {
@@ -128,6 +130,38 @@ export function ContractorListScreen() {
     });
   }, [scCode, userZip]);
 
+  useEffect(() => {
+    if (!isFocused) return;
+    if (loading) return;
+    if (didPromptNoContractors) return;
+    if (contractors.length > 0) return;
+
+    console.log('[featured_experts] no contractors -> prompt general lead');
+    setDidPromptNoContractors(true);
+
+    const timer = setTimeout(() => {
+      showAlert({
+        title: 'No contractors found',
+        message: 'No contractor found in your area would you like to search on other service?',
+        variant: 'info',
+        primaryText: 'Yes',
+        secondaryText: 'No',
+        onPrimaryPress: () => {
+          navigation.navigate('QuoteRequest', {
+            memberSlugs: [],
+            serviceTypeId,
+            mainCategoryId,
+            categoryId,
+            serviceTitle,
+            leadEndpoint: 'generalleadv1',
+          });
+        },
+      });
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [categoryId, contractors, didPromptNoContractors, isFocused, loading, mainCategoryId, navigation, serviceTitle, serviceTypeId, showAlert]);
+
   const filteredContractors = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return contractors;
@@ -157,6 +191,27 @@ export function ContractorListScreen() {
   }, [showAlert]);
 
   const onGetQuote = () => {
+    if (!loading && contractors.length === 0) {
+      showAlert({
+        title: 'No contractors found',
+        message: 'No contractor found in your area would you like to search on other service?',
+        variant: 'info',
+        primaryText: 'Yes',
+        secondaryText: 'No',
+        onPrimaryPress: () => {
+          navigation.navigate('QuoteRequest', {
+            memberSlugs: [],
+            serviceTypeId,
+            mainCategoryId,
+            categoryId,
+            serviceTitle,
+            leadEndpoint: 'generalleadv1',
+          });
+        },
+      });
+      return;
+    }
+
     if (selectedIds.length === 0) {
       showAlert({
         title: 'Get A Quote',
@@ -178,6 +233,7 @@ export function ContractorListScreen() {
       mainCategoryId: firstServiceCat?.main_category_id ?? 1,
       categoryId: firstServiceCat?.key ?? 0,
       serviceTitle,
+      leadEndpoint: 'memberleadbyslug',
     });
   };
 
@@ -317,7 +373,7 @@ export function ContractorListScreen() {
       <View style={styles.ctaWrap}>
         <Button
           title="Get A Quote"
-          disabled={selectedIds.length === 0}
+          disabled={loading || (contractors.length > 0 && selectedIds.length === 0)}
           onPress={onGetQuote}
         />
       </View>

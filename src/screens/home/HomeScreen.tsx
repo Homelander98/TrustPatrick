@@ -127,6 +127,9 @@ export function HomeScreen() {
               navigation.navigate('ContractorList', {
                 scCode: item.sc_code,
                 serviceTitle: item.title,
+                serviceTypeId: item.service_category_type?.id ?? 1,
+                mainCategoryId: item.main_category?.id ?? 1,
+                categoryId: item.top_level_category?.id ?? 0,
               })
             }
             accessibilityRole="button"

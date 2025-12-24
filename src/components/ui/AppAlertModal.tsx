@@ -56,6 +56,8 @@ export function AppAlertModal({
       visible={visible}
       transparent
       animationType="fade"
+      statusBarTranslucent
+      hardwareAccelerated
       onRequestClose={onRequestClose}
     >
       <View style={styles.overlay}>

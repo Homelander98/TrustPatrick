@@ -11,12 +11,19 @@ export type RootStackParamList = {
   Home: undefined;
   Profile: undefined;
   UpdateProfile: undefined;
-  ContractorList: { scCode: string; serviceTitle: string };
+  ContractorList: {
+    scCode: string;
+    serviceTitle: string;
+    serviceTypeId: number;
+    mainCategoryId: number;
+    categoryId: number;
+  };
   QuoteRequest: {
     memberSlugs: string[];
     serviceTypeId: number;
     mainCategoryId: number;
     categoryId: number;
     serviceTitle: string;
+    leadEndpoint?: 'memberleadbyslug' | 'generalleadv1';
   };
 };
