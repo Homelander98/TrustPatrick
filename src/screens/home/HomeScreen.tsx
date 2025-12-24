@@ -78,7 +78,7 @@ export function HomeScreen() {
       <FlatList
         data={results}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, results.length === 0 ? styles.listContentEmpty : null]}
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <View style={styles.headerBlock}>
@@ -119,6 +119,22 @@ export function HomeScreen() {
 
             {loading ? <Text style={styles.loadingText}>Searching…</Text> : null}
           </View>
+        }
+        ListEmptyComponent={
+          !loading ? (
+            <View style={styles.emptyWrap}>
+              <View style={styles.emptyCard}>
+                <Image
+                  source={require('../../components/assets/images/homeicon.png')}
+                  style={styles.emptyIcon}
+                  resizeMode="contain"
+                  accessibilityRole="image"
+                  accessibilityLabel="Home"
+                />
+                <Text style={styles.emptyText}>Please Find Asphalt Driveway Experts</Text>
+              </View>
+            </View>
+          ) : null
         }
         renderItem={({ item }) => (
           <Pressable
@@ -167,6 +183,9 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xxl,
+  },
+  listContentEmpty: {
+    flexGrow: 1,
   },
   headerBlock: {
     paddingTop: spacing.sm,
@@ -261,6 +280,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: typography.fonts.regular,
     marginTop: spacing.sm,
+  },
+  emptyWrap: {
+    flex: 1,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  emptyCard: {
+    flex: 1,
+    minHeight: 420,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  emptyIcon: {
+    width: 84,
+    height: 84,
+    marginBottom: spacing.md,
+  },
+  emptyText: {
+    color: colors.mutedText,
+    fontSize: 16,
+    fontFamily: typography.fonts.semiBold,
+    textAlign: 'center',
+    lineHeight: 22,
   },
   card: {
     flexDirection: 'row',
