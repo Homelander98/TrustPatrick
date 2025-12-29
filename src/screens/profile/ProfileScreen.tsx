@@ -144,6 +144,24 @@ export function ProfileScreen() {
               <Text style={styles.infoLabel}>Email address</Text>
               <Text style={styles.infoValue}>{user?.email ?? '—'}</Text>
             </View>
+
+            {user?.email_verified ? (
+              <Text style={styles.verifiedText}>Verified</Text>
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Verify email"
+                onPress={() =>
+                  navigation.navigate('Auth', {
+                    screen: 'VerifyEmail',
+                    params: { email: user?.email ?? undefined },
+                  })
+                }
+                hitSlop={10}
+              >
+                <Text style={styles.verifyLink}>Verify</Text>
+              </Pressable>
+            )}
           </View>
 
           <View style={styles.infoCard}>
@@ -154,6 +172,24 @@ export function ProfileScreen() {
               <Text style={styles.infoLabel}>Phone number</Text>
               <Text style={styles.infoValue}>{user?.phone ?? '—'}</Text>
             </View>
+
+            {user?.phone_verified ? (
+              <Text style={styles.verifiedText}>Verified</Text>
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Verify phone"
+                onPress={() =>
+                  navigation.navigate('Auth', {
+                    screen: 'VerifyPhone',
+                    params: { phone: user?.phone ?? undefined },
+                  })
+                }
+                hitSlop={10}
+              >
+                <Text style={styles.verifyLink}>Verify</Text>
+              </Pressable>
+            )}
           </View>
 
           <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>Address</Text>
@@ -404,6 +440,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: typography.fonts.bold,
     marginTop: 2,
+  },
+  verifiedText: {
+    color: colors.mutedText,
+    fontSize: 14,
+    fontFamily: typography.fonts.semiBold,
+  },
+  verifyLink: {
+    color: colors.link,
+    fontSize: 14,
+    fontFamily: typography.fonts.black,
   },
   detailCard: {
     backgroundColor: '#F3F4F6',

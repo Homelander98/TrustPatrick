@@ -6,6 +6,7 @@ import {
   RegisterScreen,
   ForgotPasswordScreen,
   VerifyEmailScreen,
+  VerifyPhoneScreen,
   ResetPasswordScreen,
 } from '../screens/auth';
 
@@ -23,6 +24,7 @@ export function AuthNavigator() {
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
+      <Stack.Screen name="VerifyPhone" component={VerifyPhoneScreen} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
   );

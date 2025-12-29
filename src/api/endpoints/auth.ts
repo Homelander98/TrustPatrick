@@ -6,5 +6,7 @@ export const authEndpoints = {
   resetPassword: () => '/api/homeowners/reset-password',
   sendEmailOtp: () => '/api/homeowners/send-email-otp',
   verifyEmailOtp: () => '/api/homeowners/verify-email-otp',
+  sendPhoneOtp: () => '/api/homeowners/send-phone-otp',
+  verifyPhoneOtp: () => '/api/homeowners/verify-phone-otp',
   updateProfile: () => '/api/homeowners/update-profile',
 } as const;

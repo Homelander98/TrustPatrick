@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +17,8 @@ import { useAppDispatch } from '../../store/hooks';
 import { loginHomeowner } from '../../store/slices/authSlice';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
+import { AppAlertModal } from '../../components/ui/AppAlertModal';
+import { useAppAlert } from '../../components/ui/useAppAlert';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useIsTablet } from '../../utils/layout';
@@ -28,6 +29,7 @@ export function LoginScreen() {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
   const isTablet = useIsTablet();
+  const { alertProps, show: showAlert } = useAppAlert();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,12 +49,23 @@ export function LoginScreen() {
       console.log('Login user:', data.user);
 
       if (data?.user?.email_verified === false) {
-        Alert.alert('Please verify your email', undefined, [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('VerifyEmail', { email: data.user.email }),
-          },
-        ]);
+        showAlert({
+          title: 'Please verify your email',
+          primaryText: 'Verify',
+          secondaryText: 'Cancel',
+          onPrimaryPress: () => navigation.navigate('VerifyEmail', { email: data.user.email }),
+        });
+        return;
+      }
+
+      if ((data as any)?.user?.phone_verified === false) {
+        showAlert({
+          title: 'Please verify your phone number',
+          primaryText: 'Verify',
+          secondaryText: 'Cancel',
+          onPrimaryPress: () =>
+            navigation.navigate('VerifyPhone', { phone: (data as any).user?.phone ?? undefined }),
+        });
         return;
       }
 
@@ -61,7 +74,11 @@ export function LoginScreen() {
         ?.navigate('Home' as never);
     } catch (err) {
       const message = typeof err === 'string' ? err : 'Login failed';
-      Alert.alert('Login', message);
+      showAlert({
+        title: 'Login',
+        message,
+        primaryText: 'OK',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -128,6 +145,8 @@ export function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <AppAlertModal {...alertProps} />
     </SafeAreaView>
   );
 }

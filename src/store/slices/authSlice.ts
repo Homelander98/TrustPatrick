@@ -8,6 +8,7 @@ export type AuthUser = {
   last_name: string;
   email: string;
   email_verified?: boolean;
+  phone_verified?: boolean;
   address_line_1?: string | null;
   city?: string | null;
   state?: string | null;
@@ -45,6 +46,15 @@ type SendEmailOtpSuccessData = {
 };
 
 type VerifyEmailOtpSuccessData = {
+  message?: string;
+};
+
+type SendPhoneOtpSuccessData = {
+  message?: string;
+  expires_at?: string;
+};
+
+type VerifyPhoneOtpSuccessData = {
   message?: string;
 };
 
@@ -280,6 +290,57 @@ export const verifyEmailOtpHomeowner = createAsyncThunk<
   }
 });
 
+export const sendPhoneOtpHomeowner = createAsyncThunk<
+  SendPhoneOtpSuccessData,
+  { phone: string },
+  { rejectValue: string }
+>('auth/sendPhoneOtpHomeowner', async (payload, thunkApi) => {
+  try {
+    const response = await apiRequest<SendPhoneOtpSuccessData>({
+      method: 'POST',
+      path: authEndpoints.sendPhoneOtp(),
+      body: {
+        phone: payload.phone,
+      },
+    });
+
+    if (!response.success) {
+      return thunkApi.rejectWithValue(response.message ?? 'Failed to send phone OTP');
+    }
+
+    return response.data;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to send phone OTP';
+    return thunkApi.rejectWithValue(message);
+  }
+});
+
+export const verifyPhoneOtpHomeowner = createAsyncThunk<
+  VerifyPhoneOtpSuccessData,
+  { phone: string; otp: string },
+  { rejectValue: string }
+>('auth/verifyPhoneOtpHomeowner', async (payload, thunkApi) => {
+  try {
+    const response = await apiRequest<VerifyPhoneOtpSuccessData>({
+      method: 'POST',
+      path: authEndpoints.verifyPhoneOtp(),
+      body: {
+        phone: payload.phone,
+        otp: payload.otp,
+      },
+    });
+
+    if (!response.success) {
+      return thunkApi.rejectWithValue(response.message ?? 'Failed to verify phone OTP');
+    }
+
+    return response.data;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to verify phone OTP';
+    return thunkApi.rejectWithValue(message);
+  }
+});
+
 type AuthState = {
   accessToken: string | null;
   user: AuthUser | null;
@@ -305,6 +366,12 @@ type AuthState = {
 
   verifyEmailOtpStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   verifyEmailOtpError: string | null;
+
+  sendPhoneOtpStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  sendPhoneOtpError: string | null;
+
+  verifyPhoneOtpStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  verifyPhoneOtpError: string | null;
 
   updateProfileStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   updateProfileError: string | null;
@@ -335,6 +402,12 @@ const initialState: AuthState = {
 
   verifyEmailOtpStatus: 'idle',
   verifyEmailOtpError: null,
+
+  sendPhoneOtpStatus: 'idle',
+  sendPhoneOtpError: null,
+
+  verifyPhoneOtpStatus: 'idle',
+  verifyPhoneOtpError: null,
 
   updateProfileStatus: 'idle',
   updateProfileError: null,
@@ -372,6 +445,12 @@ const authSlice = createSlice({
       state.sendEmailOtpError = null;
       state.verifyEmailOtpStatus = 'idle';
       state.verifyEmailOtpError = null;
+    },
+    clearVerifyPhoneState(state) {
+      state.sendPhoneOtpStatus = 'idle';
+      state.sendPhoneOtpError = null;
+      state.verifyPhoneOtpStatus = 'idle';
+      state.verifyPhoneOtpError = null;
     },
   },
   extraReducers: (builder) => {
@@ -480,6 +559,38 @@ const authSlice = createSlice({
       .addCase(verifyEmailOtpHomeowner.rejected, (state, action) => {
         state.verifyEmailOtpStatus = 'failed';
         state.verifyEmailOtpError = action.payload ?? 'Failed to verify email OTP';
+      });
+
+    builder
+      .addCase(sendPhoneOtpHomeowner.pending, (state) => {
+        state.sendPhoneOtpStatus = 'loading';
+        state.sendPhoneOtpError = null;
+      })
+      .addCase(sendPhoneOtpHomeowner.fulfilled, (state) => {
+        state.sendPhoneOtpStatus = 'succeeded';
+        state.sendPhoneOtpError = null;
+      })
+      .addCase(sendPhoneOtpHomeowner.rejected, (state, action) => {
+        state.sendPhoneOtpStatus = 'failed';
+        state.sendPhoneOtpError = action.payload ?? 'Failed to send phone OTP';
+      });
+
+    builder
+      .addCase(verifyPhoneOtpHomeowner.pending, (state) => {
+        state.verifyPhoneOtpStatus = 'loading';
+        state.verifyPhoneOtpError = null;
+      })
+      .addCase(verifyPhoneOtpHomeowner.fulfilled, (state) => {
+        state.verifyPhoneOtpStatus = 'succeeded';
+        state.verifyPhoneOtpError = null;
+
+        if (state.user) {
+          state.user.phone_verified = true;
+        }
+      })
+      .addCase(verifyPhoneOtpHomeowner.rejected, (state, action) => {
+        state.verifyPhoneOtpStatus = 'failed';
+        state.verifyPhoneOtpError = action.payload ?? 'Failed to verify phone OTP';
       });
 
     builder
