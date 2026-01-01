@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,6 +21,8 @@ export function ProfileScreen() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const isTablet = useIsTablet();
+  const { height: screenHeight } = useWindowDimensions();
+  const isCompact = screenHeight < 760;
   const contentMaxWidth = useMemo(() => (isTablet ? 720 : undefined), [isTablet]);
 
   const { alertProps, show: showAlert } = useAppAlert();
@@ -80,7 +82,7 @@ export function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
+      <View style={[styles.header, isCompact ? styles.headerCompact : null]}>
         <View style={[styles.headerContent, contentMaxWidth ? { maxWidth: contentMaxWidth } : null]}>
           <View style={styles.headerRow}>
             <Pressable
@@ -104,10 +106,10 @@ export function ProfileScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.avatarWrap}>
-            <View style={styles.avatarRing}>
-              <View style={styles.avatarInner}>
-                <Text style={styles.avatarText}>{initials}</Text>
+          <View style={[styles.avatarWrap, isCompact ? styles.avatarWrapCompact : null]}>
+            <View style={[styles.avatarRing, isCompact ? styles.avatarRingCompact : null]}>
+              <View style={[styles.avatarInner, isCompact ? styles.avatarInnerCompact : null]}>
+                <Text style={[styles.avatarText, isCompact ? styles.avatarTextCompact : null]}>{initials}</Text>
               </View>
             </View>
 
@@ -120,9 +122,9 @@ export function ProfileScreen() {
             ) : null}
           </View>
 
-          <Text style={styles.name}>{fullName}</Text>
+          <Text style={[styles.name, isCompact ? styles.nameCompact : null]}>{fullName}</Text>
 
-          <View style={styles.userIdPill}>
+          <View style={[styles.userIdPill, isCompact ? styles.userIdPillCompact : null]}>
             <View style={styles.userIdIconWrap}>
               <View style={styles.userIdIconHead} />
               <View style={styles.userIdIconBody} />
@@ -132,95 +134,139 @@ export function ProfileScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={[styles.sheet, contentMaxWidth ? { maxWidth: contentMaxWidth } : null]}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+      <View style={styles.body}>
+        <View
+          style={[
+            styles.sheet,
+            isCompact ? styles.sheetCompact : null,
+            contentMaxWidth ? { maxWidth: contentMaxWidth } : null,
+          ]}
+        >
+          <View style={styles.sheetContent}>
+            <Text style={[styles.sectionTitle, isCompact ? styles.sectionTitleCompact : null]}>
+              Personal Information
+            </Text>
 
-          <View style={styles.infoCard}>
-            <View style={styles.infoIconCircle}>
-              <Mail color={colors.brand} size={20} />
-            </View>
-            <View style={styles.infoBody}>
-              <Text style={styles.infoLabel}>Email address</Text>
-              <Text style={styles.infoValue}>{user?.email ?? '—'}</Text>
+            <View style={[styles.infoCard, isCompact ? styles.cardCompact : null]}>
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconCircle}>
+                  <Mail color={colors.brand} size={18} />
+                </View>
+                <View style={styles.infoBody}>
+                  <Text style={styles.infoLabel}>Email address</Text>
+                  <Text style={styles.infoValue} numberOfLines={1}>
+                    {user?.email ?? '—'}
+                  </Text>
+                </View>
+
+                {user?.email_verified ? (
+                  <Text style={styles.verifiedText}>Verified</Text>
+                ) : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Verify email"
+                    onPress={() =>
+                      navigation.navigate('Auth', {
+                        screen: 'VerifyEmail',
+                        params: { email: user?.email ?? undefined },
+                      })
+                    }
+                    hitSlop={10}
+                  >
+                    <Text style={styles.verifyLink}>Verify</Text>
+                  </Pressable>
+                )}
+              </View>
+
+              <View style={styles.infoDivider} />
+
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconCircle}>
+                  <Phone color={colors.brand} size={18} />
+                </View>
+                <View style={styles.infoBody}>
+                  <Text style={styles.infoLabel}>Phone number</Text>
+                  <Text style={styles.infoValue} numberOfLines={1}>
+                    {user?.phone ?? '—'}
+                  </Text>
+                </View>
+
+                {user?.phone_verified ? (
+                  <Text style={styles.verifiedText}>Verified</Text>
+                ) : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Verify phone"
+                    onPress={() =>
+                      navigation.navigate('Auth', {
+                        screen: 'VerifyPhone',
+                        params: { phone: user?.phone ?? undefined },
+                      })
+                    }
+                    hitSlop={10}
+                  >
+                    <Text style={styles.verifyLink}>Verify</Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
 
-            {user?.email_verified ? (
-              <Text style={styles.verifiedText}>Verified</Text>
-            ) : (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Verify email"
-                onPress={() =>
-                  navigation.navigate('Auth', {
-                    screen: 'VerifyEmail',
-                    params: { email: user?.email ?? undefined },
-                  })
-                }
-                hitSlop={10}
-              >
-                <Text style={styles.verifyLink}>Verify</Text>
-              </Pressable>
-            )}
+            <Text
+              style={[
+                styles.sectionTitle,
+                isCompact ? styles.sectionTitleCompact : null,
+                { marginTop: isCompact ? spacing.md : spacing.xl },
+              ]}
+            >
+              Address
+            </Text>
+
+            <View style={[styles.infoCard, isCompact ? styles.cardCompact : null]}>
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconCircle}>
+                  <MapPin color={colors.brand} size={18} />
+                </View>
+                <View style={styles.infoBody}>
+                  <Text style={styles.infoValue} numberOfLines={1}>
+                    {addressLineTop}
+                  </Text>
+                  <Text style={styles.infoSubValue} numberOfLines={1}>
+                    {addressLineBottom}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <Text
+              style={[
+                styles.sectionTitle,
+                isCompact ? styles.sectionTitleCompact : null,
+                { marginTop: isCompact ? spacing.md : spacing.xl },
+              ]}
+            >
+              Account Details
+            </Text>
+
+            <View style={[styles.detailCard, isCompact ? styles.cardCompact : null]}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Member Since</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>
+                  {memberSince}
+                </Text>
+              </View>
+
+              <View style={styles.infoDivider} />
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Last Login</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>
+                  {lastLogin}
+                </Text>
+              </View>
+            </View>
           </View>
 
-          <View style={styles.infoCard}>
-            <View style={styles.infoIconCircle}>
-              <Phone color={colors.brand} size={20} />
-            </View>
-            <View style={styles.infoBody}>
-              <Text style={styles.infoLabel}>Phone number</Text>
-              <Text style={styles.infoValue}>{user?.phone ?? '—'}</Text>
-            </View>
-
-            {user?.phone_verified ? (
-              <Text style={styles.verifiedText}>Verified</Text>
-            ) : (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Verify phone"
-                onPress={() =>
-                  navigation.navigate('Auth', {
-                    screen: 'VerifyPhone',
-                    params: { phone: user?.phone ?? undefined },
-                  })
-                }
-                hitSlop={10}
-              >
-                <Text style={styles.verifyLink}>Verify</Text>
-              </Pressable>
-            )}
-          </View>
-
-          <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>Address</Text>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoIconCircle}>
-              <MapPin color={colors.brand} size={20} />
-            </View>
-            <View style={styles.infoBody}>
-              <Text style={styles.infoValue}>{addressLineTop}</Text>
-              <Text style={styles.infoSubValue}>{addressLineBottom}</Text>
-            </View>
-          </View>
-
-          <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>Account Details</Text>
-
-          <View style={styles.detailCard}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Member Since</Text>
-              <Text style={styles.detailValue}>{memberSince}</Text>
-            </View>
-          </View>
-
-          <View style={styles.detailCard}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Last Login</Text>
-              <Text style={styles.detailValue}>{lastLogin}</Text>
-            </View>
-          </View>
-
-          <View style={styles.actionsRow}>
+          <View style={[styles.actionsRow, isCompact ? styles.actionsRowCompact : null]}>
             <Pressable accessibilityRole="button" style={styles.logoutButton} onPress={onLogout}>
               <Text style={styles.logoutText}>Logout</Text>
             </Pressable>
@@ -230,7 +276,7 @@ export function ProfileScreen() {
             </Pressable>
           </View>
         </View>
-      </ScrollView>
+      </View>
       <AppAlertModal {...alertProps} />
     </SafeAreaView>
   );
@@ -268,6 +314,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     paddingHorizontal: spacing.xl,
   },
+  headerCompact: {
+    paddingBottom: spacing.xl,
+  },
   headerContent: {
     width: '100%',
     alignSelf: 'center',
@@ -295,6 +344,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     alignSelf: 'center',
   },
+  avatarWrapCompact: {
+    marginTop: spacing.lg,
+  },
   avatarRing: {
     width: 96,
     height: 96,
@@ -304,6 +356,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarRingCompact: {
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    borderWidth: 3,
+  },
   avatarInner: {
     width: 78,
     height: 78,
@@ -312,11 +370,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarInnerCompact: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+  },
   avatarText: {
     color: colors.brand,
     fontSize: 32,
     fontFamily: typography.fonts.black,
     letterSpacing: 1,
+  },
+  avatarTextCompact: {
+    fontSize: 28,
   },
   verifiedBadge: {
     position: 'absolute',
@@ -344,6 +410,10 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: typography.fonts.black,
   },
+  nameCompact: {
+    marginTop: spacing.md,
+    fontSize: 22,
+  },
   userIdPill: {
     marginTop: spacing.md,
     alignSelf: 'center',
@@ -354,6 +424,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: 999,
+  },
+  userIdPillCompact: {
+    marginTop: spacing.sm,
+    paddingVertical: 6,
   },
   userIdIconWrap: {
     width: 18,
@@ -383,8 +457,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: typography.fonts.semiBold,
   },
-  scrollContent: {
-    paddingBottom: spacing.xxl,
+  body: {
+    flex: 1,
   },
   sheet: {
     marginTop: -28,
@@ -392,10 +466,20 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl + spacing.md,
-    paddingBottom: spacing.xxl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xl,
     width: '100%',
     alignSelf: 'center',
+    flex: 1,
+  },
+  sheetCompact: {
+    marginTop: -18,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  sheetContent: {
+    flex: 1,
+    minHeight: 0,
   },
   sectionTitle: {
     color: colors.brand,
@@ -403,15 +487,31 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bold,
     marginBottom: spacing.lg,
   },
+  sectionTitleCompact: {
+    fontSize: 16,
+    marginBottom: spacing.md,
+  },
   infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
+    gap: spacing.md,
     backgroundColor: '#F3F4F6',
     borderRadius: 16,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     marginBottom: spacing.lg,
+  },
+  cardCompact: {
+    paddingVertical: spacing.md,
+    marginBottom: spacing.md,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  infoDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
   },
   infoIconCircle: {
     width: 44,
@@ -474,9 +574,12 @@ const styles = StyleSheet.create({
     fontFamily: typography.fonts.bold,
   },
   actionsRow: {
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     flexDirection: 'row',
     gap: spacing.lg,
+  },
+  actionsRowCompact: {
+    marginTop: spacing.md,
   },
   logoutButton: {
     flex: 1,
